@@ -1,0 +1,61 @@
+ int rank ← MPI_Comm_rank()
+ int n ← MPI_Comm_size()
+
+ enum state {UNDEC, INCOV, NOTCOV}
+ enum message_type {ROUND, DATA, ROVER, FINISHED, TERMINATE}
+ int state ← UNDEC
+ array of int msg ← [⊥, ⊥, ⊥, ⊥]
+ matrix int A[n][n] ← ... // Adjacency matrix
+ list of list of int children ← [[3, 4, 7], [], [6], [2], [], [1], [], [5]]
+ list of int parents ← [0, 5, 3, 0, 0, 7, 2, 0]
+ set of int childs ← children[rank]
+ set of int neighs ← ∅
+ set of int neighs_rcvd, rover_rcvd, finish_rcvd ← ∅
+ int round_num ← 0
+ boolean finished_childs ← false, finished_all ← false, terminated ← false
+
+ for i ← 0 to n-1 do
+     if A[rank][i] = 1 then
+         neighs.add(i)
+     end if
+ end for
+ set of int currneighs ← neighs.copy()
+ set of int currchilds ← childs.copy()
+ int round_saved
+ 
+ while ¬terminated do
+     boolean round_over ← false, neighs_over ← false, childs_over ← false
+     boolean neighs_sent ← false
+     clear rover_rcvd, neighs_rcvd
+     
+     if rank = 0 then
+         prepare and send ROUND message to children
+         if state = UNDEC then
+             prepare and send DATA message to neighbors
+             set neighs_sent to true
+         else
+             set neighs_over to true and neighs_sent to true
+     end if
+     
+     while ¬round_over do
+         msg ← receive message
+         handle ROUND message
+         handle DATA message
+         handle ROVER message
+         handle FINISHED message
+         handle TERMINATE message
+         update states and perform transitions based on received messages
+     end while
+     
+     increment round_num
+     update current neighbors and children
+     
+     if no neighbors and state = UNDEC then
+         set state to NOTCOV
+         if no children then
+             signal completion to parent
+         end if
+     end if
+ end while
+ output rank and coloring information
+       End Algorithm
