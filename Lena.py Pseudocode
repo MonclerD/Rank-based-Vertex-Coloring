@@ -1,0 +1,50 @@
+ int rank ← MPI_Comm_rank(), n ← MPI_Comm_size()
+ int color ← -1, round_num ← 0
+ boolean changed ← false, round_over ← false, childs_end ← false
+ set of int children ← [[3, 4, 7], [], [6], [2], [], [1], [], [5]]
+ int parent ← [0, 5, 3, 0, 0, 7, 2, 0]
+ set of int childs ← children[rank], neighs ← ∅, finished ← ∅, round_end ← ∅
+ array of int msg ← [-1, -1, -1, -1]
+ dictionary of int colors ← {}
+ int A[n][n] ← ... // adjacency matrix
+ int count ← n - 1
+ message types ROUND, COLOR, ROVER, FIN
+ 
+ for int i ← 0 to n do
+     if A[rank][i] = 1 then
+         neighs ← neighs ∪ {i}
+         colors[i] ← -1
+     end if
+ end for
+ 
+ if rank = 0 then
+     color ← 0
+ end if
+ 
+ while count > 0 do
+     if rank = 0 then
+         round_num ← round_num + 1
+         msg ← [rank, ROUND, round_num, -1]
+         for each child in childs do
+             MPI_Send msg to child with tag ROUND
+         end for
+     end if
+     
+     while ¬round_over do
+         msg ← MPI_Recv from MPI_ANY_SOURCE, MPI_ANY_TAG
+         int sender, typ, roun, neigh_color ← msg[0], msg[1], msg[2], msg[3]
+         msg[0] ← rank
+         case msg[1] of
+             ROUND:
+                 // Process ROUND message
+             COLOR:
+                 // Process COLOR message
+             ROVER:
+                 // Process ROVER message
+         end case
+     end while
+     
+     count ← count - 1
+ end while
+ MPI_Finalize()
+ print "rank: ", rank, " color: ", color
